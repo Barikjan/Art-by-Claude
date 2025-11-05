@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ethereal Flow - Algorithmic Art by Claude</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        body {
+            background: #000;
+            font-family: 'Courier New', monospace;
+        }
+
+        canvas {
+            display: block;
+            cursor: crosshair;
+        }
+
+        #controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: rgba(255, 255, 255, 0.8);
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            z-index: 100;
+            font-size: 12px;
+            max-width: 250px;
+        }
+
+        button {
+            margin: 5px 5px 5px 0;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        button.active {
+            background: rgba(100, 200, 255, 0.5);
+            border-color: rgba(100, 200, 255, 0.8);
+        }
+
+        h1 {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        .info {
+            margin: 10px 0;
+            line-height: 1.6;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+
+    <div id="controls">
+        <h1>✨ Ethereal Flow</h1>
+        <div class="info">
+            <strong>Modes:</strong><br>
+            <button id="mode1" class="active">Flow Field</button>
+            <button id="mode2">Cosmic Web</button>
+            <button id="mode3">Aurora</button>
+            <button id="mode4">Mandala</button>
+        </div>
+        <div class="info">
+            <button id="clearBtn">Clear Canvas</button>
+            <button id="pauseBtn">Pause</button>
+        </div>
+        <div class="info" style="font-size: 10px; opacity: 0.7;">
+            Click and drag to interact<br>
+            Press SPACE to regenerate
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+
+        // Simplified Perlin noise implementation
+        class PerlinNoise {
+            constructor() {
+                this.permutation = [];
+                for (let i = 0; i < 256; i++) {
+                    this.permutation[i] = i;
+                }
+                this.permutation.sort(() => Math.random() - 0.5);
+                this.p = [...this.permutation, ...this.permutation];
+            }
+
+            fade(t) {
+                return t * t * t * (t * (t * 6 - 15) + 10);
+            }
+
+            lerp(t, a, b) {
+                return a + t * (b - a);
+            }
+
+            grad(hash, x, y) {
+                const h = hash & 15;
+                const u = h < 8 ? x : y;
+                const v = h < 4 ? y : h === 12 || h === 14 ? x : 0;
+                return ((h & 1) === 0 ? u : -u) + ((h & 2) === 0 ? v : -v);
+            }
+
+            noise(x, y) {
+                const X = Math.floor(x) & 255;
+                const Y = Math.floor(y) & 255;
+
+                x -= Math.floor(x);
+                y -= Math.floor(y);
+
+                const u = this.fade(x);
+                const v = this.fade(y);
+
+                const a = this.p[X] + Y;
+                const aa = this.p[a];
+                const ab = this.p[a + 1];
+                const b = this.p[X + 1] + Y;
+                const ba = this.p[b];
+                const bb = this.p[b + 1];
+
+                return this.lerp(v,
+                    this.lerp(u, this.grad(this.p[aa], x, y), this.grad(this.p[ba], x - 1, y)),
+                    this.lerp(u, this.grad(this.p[ab], x, y - 1), this.grad(this.p[bb], x - 1, y - 1))
+                );
+            }
+        }
+
+        let perlin = new PerlinNoise();
+        let particles = [];
+        let mode = 'flowField';
+        let time = 0;
+        let isPaused = false;
+        let mouseX = width / 2;
+        let mouseY = height / 2;
+        let mouseDown = false;
+
+        class Particle {
+            constructor(x, y) {
+                this.x = x || Math.random() * width;
+                this.y = y || Math.random() * height;
+                this.vx = 0;
+                this.vy = 0;
+                this.life = 1;
+                this.maxLife = Math.random() * 200 + 100;
+                this.age = 0;
+                this.hue = Math.random() * 360;
+                this.size = Math.random() * 2 + 1;
+                this.history = [];
+                this.maxHistory = Math.floor(Math.random() * 20) + 10;
+            }
+
+            update() {
+                this.age++;
+                this.life = 1 - (this.age / this.maxLife);
+
+                if (this.age > this.maxLife) {
+                    this.reset();
+                }
+
+                let angle, force;
+
+                switch(mode) {
+                    case 'flowField':
+                        angle = perlin.noise(this.x * 0.005, this.y * 0.005 + time * 0.0003) * Math.PI * 4;
+                        force = perlin.noise(this.x * 0.01 + 1000, this.y * 0.01 + time * 0.0002) * 0.5 + 0.5;
+                        this.vx += Math.cos(angle) * force * 0.3;
+                        this.vy += Math.sin(angle) * force * 0.3;
+                        break;
+
+                    case 'cosmicWeb':
+                        const dx = mouseX - this.x;
+                        const dy = mouseY - this.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        const attraction = mouseDown ? -200 : 200;
+
+                        if (dist < 300) {
+                            this.vx += (dx / dist) * (attraction / dist) * 0.1;
+                            this.vy += (dy / dist) * (attraction / dist) * 0.1;
+                        }
+
+                        angle = perlin.noise(this.x * 0.003, this.y * 0.003 + time * 0.0005) * Math.PI * 6;
+                        this.vx += Math.cos(angle) * 0.2;
+                        this.vy += Math.sin(angle) * 0.2;
+                        break;
+
+                    case 'aurora':
+                        const wave = Math.sin(this.x * 0.01 + time * 0.05) * 50;
+                        const targetY = height * 0.3 + wave + perlin.noise(this.x * 0.002, time * 0.001) * 100;
+                        this.vy += (targetY - this.y) * 0.0001;
+                        this.vx += perlin.noise(this.y * 0.01, time * 0.001) * 0.5;
+                        break;
+
+                    case 'mandala':
+                        const centerX = width / 2;
+                        const centerY = height / 2;
+                        const dcx = this.x - centerX;
+                        const dcy = this.y - centerY;
+                        const radius = Math.sqrt(dcx * dcx + dcy * dcy);
+                        const theta = Math.atan2(dcy, dcx);
+
+                        const spiralAngle = theta + time * 0.001 + radius * 0.01;
+                        const spiralForce = perlin.noise(radius * 0.01, time * 0.001) * 0.5;
+
+                        this.vx += Math.cos(spiralAngle) * spiralForce;
+                        this.vy += Math.sin(spiralAngle) * spiralForce;
+
+                        // Pull towards center slightly
+                        if (radius > 300) {
+                            this.vx -= dcx * 0.0001;
+                            this.vy -= dcy * 0.0001;
+                        }
+                        break;
+                }
+
+                // Apply friction
+                this.vx *= 0.95;
+                this.vy *= 0.95;
+
+                // Update position
+                this.history.push({x: this.x, y: this.y});
+                if (this.history.length > this.maxHistory) {
+                    this.history.shift();
+                }
+
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // Wrap around edges
+                if (this.x < 0) this.x = width;
+                if (this.x > width) this.x = 0;
+                if (this.y < 0) this.y = height;
+                if (this.y > height) this.y = 0;
+
+                // Update hue based on movement
+                this.hue = (this.hue + Math.abs(this.vx) + Math.abs(this.vy)) % 360;
+            }
+
+            draw() {
+                // Draw trail
+                if (this.history.length > 1) {
+                    ctx.beginPath();
+                    ctx.moveTo(this.history[0].x, this.history[0].y);
+
+                    for (let i = 1; i < this.history.length; i++) {
+                        const alpha = (i / this.history.length) * this.life;
+                        const hue = (this.hue + i * 2) % 360;
+                        ctx.strokeStyle = `hsla(${hue}, 80%, 60%, ${alpha * 0.3})`;
+                        ctx.lineWidth = this.size * (i / this.history.length);
+                        ctx.lineTo(this.history[i].x, this.history[i].y);
+                        ctx.stroke();
+                        ctx.beginPath();
+                        ctx.moveTo(this.history[i].x, this.history[i].y);
+                    }
+                }
+
+                // Draw particle
+                const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size * 3);
+                gradient.addColorStop(0, `hsla(${this.hue}, 100%, 70%, ${this.life * 0.8})`);
+                gradient.addColorStop(0.5, `hsla(${this.hue + 30}, 100%, 60%, ${this.life * 0.4})`);
+                gradient.addColorStop(1, `hsla(${this.hue + 60}, 100%, 50%, 0)`);
+
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size * 3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            reset() {
+                this.age = 0;
+                this.life = 1;
+                this.history = [];
+
+                switch(mode) {
+                    case 'mandala':
+                        const angle = Math.random() * Math.PI * 2;
+                        const radius = Math.random() * 100 + 100;
+                        this.x = width / 2 + Math.cos(angle) * radius;
+                        this.y = height / 2 + Math.sin(angle) * radius;
+                        break;
+                    case 'aurora':
+                        this.x = Math.random() * width;
+                        this.y = height * 0.2;
+                        break;
+                    default:
+                        this.x = Math.random() * width;
+                        this.y = Math.random() * height;
+                }
+
+                this.vx = 0;
+                this.vy = 0;
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            const count = mode === 'mandala' ? 3000 : 2000;
+            for (let i = 0; i < count; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function animate() {
+            if (!isPaused) {
+                // Create fade effect instead of clearing
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+                ctx.fillRect(0, 0, width, height);
+
+                time++;
+
+                particles.forEach(particle => {
+                    particle.update();
+                    particle.draw();
+                });
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        function setMode(newMode) {
+            mode = newMode;
+            perlin = new PerlinNoise();
+            initParticles();
+
+            document.querySelectorAll('#controls button[id^="mode"]').forEach(btn => {
+                btn.classList.remove('active');
+            });
+        }
+
+        // Event listeners
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            initParticles();
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+
+            if (mouseDown && (mode === 'flowField' || mode === 'cosmicWeb')) {
+                for (let i = 0; i < 5; i++) {
+                    particles.push(new Particle(mouseX + Math.random() * 20 - 10, mouseY + Math.random() * 20 - 10));
+                }
+                if (particles.length > 5000) {
+                    particles.splice(0, 5);
+                }
+            }
+        });
+
+        canvas.addEventListener('mousedown', () => {
+            mouseDown = true;
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            mouseDown = false;
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                perlin = new PerlinNoise();
+                initParticles();
+            }
+        });
+
+        document.getElementById('mode1').addEventListener('click', function() {
+            setMode('flowField');
+            this.classList.add('active');
+        });
+
+        document.getElementById('mode2').addEventListener('click', function() {
+            setMode('cosmicWeb');
+            this.classList.add('active');
+        });
+
+        document.getElementById('mode3').addEventListener('click', function() {
+            setMode('aurora');
+            this.classList.add('active');
+        });
+
+        document.getElementById('mode4').addEventListener('click', function() {
+            setMode('mandala');
+            this.classList.add('active');
+        });
+
+        document.getElementById('clearBtn').addEventListener('click', () => {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, width, height);
+        });
+
+        document.getElementById('pauseBtn').addEventListener('click', function() {
+            isPaused = !isPaused;
+            this.textContent = isPaused ? 'Resume' : 'Pause';
+        });
+
+        // Initialize
+        initParticles();
+        animate();
+    </script>
+</body>
+</html>
