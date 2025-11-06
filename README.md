@@ -1,59 +1,39 @@
-# Ethereal Flow - Algorithmic Art by Claude
+# Celestial Flux Observatory
 
-A mesmerizing, interactive generative art experience featuring particle systems, flow fields, and beautiful mathematical patterns.
+A next-generation generative art playground that fuses multiple visual engines into one immersive experience. Wander through drifting nebulae, orbital light choreography, chromatic rainfalls, kaleidoscopic mandalas, and a prismatic hyperspace tunnel — all in your browser with no dependencies.
 
-## 🎨 Features
+## ✨ Highlights
 
-### Four Stunning Visual Modes
+- **Five Distinct Worlds** – Instantly swap between Nebula Bloom, Luminous Orbitals, Chromatic Cascade, Fractal Bloom, and Prismatic Gateway.
+- **Auto-Cycling Dreamscapes** – Enable Auto Cycle to drift through scenes every ~26 seconds for a gallery-style showcase.
+- **Dynamic Trail Persistence** – Tune atmospheric decay with the Trail Persistence slider to choose ethereal smears or crisp geometry.
+- **Responsive Interactivity** – Mouse/touch motion perturbs physics; press and hold to invert gravity within fields.
+- **One-Click Artifacts** – Capture high-resolution stills from any frame directly as PNG.
 
-1. **Flow Field** - Particles flow through a dynamic vector field created with Perlin noise, creating organic, swirling patterns
-2. **Cosmic Web** - Interactive gravitational attraction/repulsion around your cursor, creating cosmic web-like structures
-3. **Aurora** - Flowing, wave-like patterns reminiscent of the Northern Lights
-4. **Mandala** - Spiraling, symmetrical patterns that evolve around the center point
+## 🕹️ Controls
 
-### Interactive Elements
+| Action | Effect |
+| ------ | ------ |
+| **Mouse / Touch Move** | Distort vector fields, bend ribbons, and shift orbits beneath the cursor halo. |
+| **Hold Mouse / Touch** | Invert gravitational influence for void-carving effects. |
+| **Spacebar** | Regenerate the Perlin noise lattice and refresh the current composition. |
+| **Arrow Keys** | Quickly step backward/forward through scenes. |
+| **Auto Cycle** | Toggle automatic scene transitions. |
+| **Trail Persistence** | Adjust atmospheric decay between 0.02–0.18. |
+| **Save Still** | Export the canvas as a PNG snapshot. |
 
-- **Mouse Interaction**: Move your cursor to influence particle behavior (especially in Cosmic Web mode)
-- **Click & Drag**: Create new particles where you click and drag (in Flow Field and Cosmic Web modes)
-- **Spacebar**: Regenerate the noise field for new patterns
-- **Real-time Controls**: Switch between modes, pause/resume, and clear the canvas
+## 🚀 Getting Started
 
-## 🚀 How to Use
+1. Open `index.html` in any modern desktop or mobile browser.
+2. Choose a scene (or let Auto Cycle guide you).
+3. Experiment with the controls, sliders, and pointer interactions.
+4. Capture your favorite frames and share the cosmic stills.
 
-1. **Open the Art**: Simply open `index.html` in any modern web browser
-2. **Explore Modes**: Click the mode buttons to switch between different visual styles
-3. **Interact**: Move your mouse, click and drag to create particles
-4. **Experiment**: Press spacebar to regenerate patterns, try different modes
+## 🧠 Under the Hood
 
-## 🔧 Technical Details
+- **Custom Perlin Noise** powers flow fields, ribbon drift, and kaleidoscopic modulation.
+- **Layered Particle Systems** render thousands of additive-glow elements with high-DPI support.
+- **Scene Architecture** modularizes five unique engines with live UI bindings and telemetry.
+- **Retina-Friendly Canvas** scales with device pixel ratio for sharp detail on high-resolution displays.
 
-- **Pure JavaScript** - No external libraries or dependencies
-- **Canvas API** - Hardware-accelerated 2D rendering
-- **Perlin Noise** - Custom implementation for smooth, organic motion
-- **Particle System** - Thousands of particles with individual trails and life cycles
-- **Performance Optimized** - Smooth 60fps animation with intelligent trail rendering
-
-## 🎯 The Mathematics Behind the Beauty
-
-- **Perlin Noise Fields**: Creates smooth, natural-looking randomness for organic flow
-- **Vector Fields**: Each particle follows forces calculated from noise functions
-- **Gradient Dynamics**: Colors shift through HSL color space based on particle movement
-- **Spiral Mathematics**: Mandala mode uses polar coordinates and angular momentum
-- **Wave Functions**: Aurora mode combines sine waves with noise for undulating patterns
-
-## 🌟 Customization
-
-The code is well-structured and easy to modify. You can customize:
-- Particle count (adjust in `initParticles()`)
-- Color schemes (modify HSL values in particle drawing)
-- Movement physics (adjust force multipliers and friction)
-- Trail lengths (change `maxHistory` values)
-- Noise scale (modify noise function parameters)
-
-## 📝 Credits
-
-Created with algorithmic creativity by Claude - An exploration of generative art, particle systems, and the beauty of mathematical patterns.
-
-## 🎭 Enjoy!
-
-Let the particles flow, watch the patterns emerge, and lose yourself in the algorithmic beauty.
+Lose yourself in the luminous currents and let the observatory choreograph endless abstract stories.
